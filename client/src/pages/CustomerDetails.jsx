@@ -184,8 +184,10 @@ const CustomerDetails = () => {
               <span className="font-medium text-gray-800 text-right max-w-[200px]">{customer.address}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Plan Price</span>
-              <span className="font-medium text-gray-800">₹{customer.planPrice}/month</span>
+              <span className="text-gray-500">Plan</span>
+              <span className="font-medium text-gray-800">
+                {customer.planId ? customer.planId.name : 'Custom Plan'} (₹{customer.planPrice}/month)
+              </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Plan Start</span>

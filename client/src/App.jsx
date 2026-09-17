@@ -14,6 +14,13 @@ import Customers from './pages/Customers';
 import AddCustomer from './pages/AddCustomer';
 import CustomerDetails from './pages/CustomerDetails';
 import EditCustomer from './pages/EditCustomer';
+import Menu from './pages/Menu';
+import Plans from './pages/Plans';
+import AddPlan from './pages/AddPlan';
+import EditPlan from './pages/EditPlan';
+import Clock from './pages/Clock';
+import Transfers from './pages/Transfers';
+import Import from './pages/Import';
 import NotFound from './pages/NotFound';
 
 const AppLayout = ({ children }) => {
@@ -56,6 +63,12 @@ const App = () => {
           <Register />
         </>
       } />
+      <Route path="/menu" element={
+        <>
+          <Navbar onToggleSidebar={() => {}} />
+          <Menu />
+        </>
+      } />
 
       {/* Protected routes */}
       <Route path="/dashboard" element={
@@ -81,6 +94,36 @@ const App = () => {
       <Route path="/customers/:id/edit" element={
         <ProtectedRoute>
           <AppLayout><EditCustomer /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/plans" element={
+        <ProtectedRoute>
+          <AppLayout><Plans /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/plans/new" element={
+        <ProtectedRoute>
+          <AppLayout><AddPlan /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/plans/:id/edit" element={
+        <ProtectedRoute>
+          <AppLayout><EditPlan /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/clock" element={
+        <ProtectedRoute>
+          <AppLayout><Clock /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/transfers" element={
+        <ProtectedRoute>
+          <AppLayout><Transfers /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/import" element={
+        <ProtectedRoute>
+          <AppLayout><Import /></AppLayout>
         </ProtectedRoute>
       } />
 

@@ -50,6 +50,12 @@ const Landing = () => {
             ) : (
               <>
                 <Link
+                  to="/menu"
+                  className="px-6 py-3 bg-white text-orange-500 border border-orange-500 font-medium rounded-xl hover:bg-orange-50 transition-colors shadow-lg shadow-orange-100"
+                >
+                  View Our Menu
+                </Link>
+                <Link
                   to="/register"
                   className="px-6 py-3 bg-orange-500 text-white font-medium rounded-xl hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
                 >

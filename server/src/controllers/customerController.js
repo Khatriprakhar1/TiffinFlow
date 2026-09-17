@@ -37,6 +37,7 @@ const getCustomers = async (req, res, next) => {
 
     const total = await Customer.countDocuments(query);
     const customers = await Customer.find(query)
+      .populate('planId', 'name')
       .sort({ [sortField]: sortOrder })
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit));
@@ -60,7 +61,7 @@ const getCustomers = async (req, res, next) => {
 // @route   GET /api/customers/:id
 const getCustomer = async (req, res, next) => {
   try {
-    const customer = await Customer.findById(req.params.id);
+    const customer = await Customer.findById(req.params.id).populate('planId', 'name');
     if (!customer) {
       return res.status(404).json({
         success: false,
@@ -78,37 +79,43 @@ const getCustomer = async (req, res, next) => {
 // @route   POST /api/customers
 const createCustomer = async (req, res, next) => {
   try {
-    const { name, phone, address, planPrice, planStartDate } = req.body;
+    const { name, phone, address, planPrice, planStartDate, planId } = req.body;
 
-    if (!name || !phone || !address || !planPrice || !planStartDate) {
+    if (!name || !phone || !address) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide name, phone, address, planPrice, and planStartDate'
+        message: 'Please provide name, phone, and address'
       });
     }
 
-    if (planPrice <= 0) {
+    if (planPrice && planPrice < 0) {
       return res.status(400).json({
         success: false,
-        message: 'Plan price must be positive'
+        message: 'Plan price cannot be negative'
       });
     }
+
+    const isTransferTarget = planId === 'none' || !planPrice || planPrice === 0;
 
     const customer = await Customer.create({
       name,
       phone,
       address,
-      planPrice,
-      planStartDate
+      planPrice: isTransferTarget ? 0 : planPrice,
+      planStartDate: isTransferTarget ? undefined : planStartDate,
+      planId: planId && planId !== 'none' ? planId : undefined,
+      status: isTransferTarget ? 'inactive' : 'active'
     });
 
-    // Auto-create subscription for this customer
-    await Subscription.create({
-      customerId: customer._id,
-      monthlyPrice: planPrice,
-      startDate: planStartDate,
-      pausePeriods: []
-    });
+    if (!isTransferTarget) {
+      // Auto-create subscription for this customer
+      await Subscription.create({
+        customerId: customer._id,
+        monthlyPrice: planPrice,
+        startDate: planStartDate,
+        pausePeriods: []
+      });
+    }
 
     res.status(201).json({ success: true, data: customer });
   } catch (error) {
@@ -120,7 +127,7 @@ const createCustomer = async (req, res, next) => {
 // @route   PUT /api/customers/:id
 const updateCustomer = async (req, res, next) => {
   try {
-    const { name, phone, address, planPrice } = req.body;
+    const { name, phone, address, planPrice, planId } = req.body;
 
     const customer = await Customer.findById(req.params.id);
     if (!customer) {
@@ -130,10 +137,10 @@ const updateCustomer = async (req, res, next) => {
       });
     }
 
-    if (planPrice !== undefined && planPrice <= 0) {
+    if (planPrice !== undefined && planPrice < 0) {
       return res.status(400).json({
         success: false,
-        message: 'Plan price must be positive'
+        message: 'Plan price cannot be negative'
       });
     }
 
@@ -141,6 +148,7 @@ const updateCustomer = async (req, res, next) => {
     if (name) customer.name = name;
     if (phone) customer.phone = phone;
     if (address) customer.address = address;
+    if (planId !== undefined) customer.planId = planId === '' ? undefined : planId;
     if (planPrice) {
       customer.planPrice = planPrice;
       // Also update subscription price
@@ -187,6 +195,7 @@ const getStats = async (req, res, next) => {
     const total = await Customer.countDocuments();
     const active = await Customer.countDocuments({ status: 'active' });
     const paused = await Customer.countDocuments({ status: 'paused' });
+    const inactive = await Customer.countDocuments({ status: 'inactive' });
 
     // Estimated monthly revenue from active customers
     const revenueResult = await Customer.aggregate([
@@ -197,6 +206,7 @@ const getStats = async (req, res, next) => {
 
     // Recent 5 customers
     const recentCustomers = await Customer.find()
+      .populate('planId', 'name')
       .sort({ createdAt: -1 })
       .limit(5);
 
@@ -206,6 +216,7 @@ const getStats = async (req, res, next) => {
         total,
         active,
         paused,
+        inactive,
         estimatedRevenue,
         recentCustomers
       }

@@ -19,7 +19,11 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/customers', require('./routes/customerRoutes'));
+app.use('/api', require('./routes/transferRoutes'));
 app.use('/api/subscriptions', require('./routes/subscriptionRoutes'));
+app.use('/api/plans', require('./routes/planRoutes'));
+app.use('/api', require('./routes/clockRoutes'));
+app.use('/api/import', require('./routes/importRoutes'));
 
 // Health check
 app.get('/api/health', (req, res) => {

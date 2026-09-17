@@ -32,10 +32,15 @@ const CustomerTable = ({ customers, onDelete, onPause, onResume }) => {
               <tr key={customer._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 font-medium text-gray-800">{customer.name}</td>
                 <td className="px-4 py-3 text-gray-600">{customer.phone}</td>
-                <td className="px-4 py-3 text-gray-600 hidden md:table-cell max-w-[200px] truncate">
+                <td className="px-4 py-3 hidden md:table-cell max-w-[200px] truncate">
                   {customer.address}
                 </td>
-                <td className="px-4 py-3 text-gray-800 font-medium">₹{customer.planPrice}</td>
+                <td className="px-4 py-3">
+                  <div className="font-medium text-gray-800">
+                    {customer.planId ? customer.planId.name : 'Custom Plan'}
+                  </div>
+                  <div className="text-xs text-gray-500">₹{customer.planPrice}/mo</div>
+                </td>
                 <td className="px-4 py-3">
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

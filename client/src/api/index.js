@@ -54,4 +54,31 @@ export const subscriptionAPI = {
   getBill: (customerId, month) => API.get(`/subscriptions/${customerId}/bill`, { params: { month } }),
 };
 
+// Plan API
+export const planAPI = {
+  getAll: (params) => API.get('/plans', { params }),
+  getOne: (id) => API.get(`/plans/${id}`),
+  create: (data) => API.post('/plans', data),
+  update: (id, data) => API.put(`/plans/${id}`, data),
+  delete: (id) => API.delete(`/plans/${id}`),
+};
+
+// Clock / Notification API
+export const clockAPI = {
+  trigger: (data) => API.post('/clock', data),
+  getOutbox: (params) => API.get('/outbox', { params }),
+};
+
+// Transfer API
+export const transferAPI = {
+  transfer: (data) => API.post('/subscriptions/transfer', data),
+  getLogs: () => API.get('/transfers'),
+  getSplitBill: (customerId, month) => API.get(`/subscriptions/${customerId}/split-bill`, { params: { month } }),
+};
+
+// Import API
+export const importAPI = {
+  importCustomers: (data) => API.post('/import/customers', data),
+};
+
 export default API;

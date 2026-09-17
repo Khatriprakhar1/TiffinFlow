@@ -19,26 +19,31 @@ const customerSchema = new mongoose.Schema({
     required: [true, 'Address is required'],
     trim: true
   },
+  planId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Plan',
+    required: false // Optional for backward compatibility with existing customers
+  },
   planPrice: {
     type: Number,
-    required: [true, 'Plan price is required'],
-    min: [1, 'Plan price must be positive']
+    required: false,
+    min: [0, 'Plan price cannot be negative'],
+    default: 0
   },
   planStartDate: {
     type: Date,
-    required: [true, 'Plan start date is required']
+    required: false
   },
   status: {
     type: String,
-    enum: ['active', 'paused'],
-    default: 'active'
+    enum: ['active', 'paused', 'inactive'],
+    default: 'inactive'
   }
 }, {
   timestamps: true
 });
 
 // Indexes for search and filtering
-customerSchema.index({ phone: 1 });
 customerSchema.index({ name: 'text' });
 customerSchema.index({ status: 1 });
 

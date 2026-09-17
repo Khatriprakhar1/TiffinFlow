@@ -125,10 +125,84 @@ function calculateBill(monthlyPrice, year, month, pausePeriods = []) {
     finalBill
   };
 }
+/**
+ * Calculate a split bill for a customer who was active only for part of the month.
+ * Used when a subscription is transferred mid-cycle.
+ *
+ * @param {number} monthlyPrice - The monthly plan price
+ * @param {number} year - Billing year
+ * @param {number} month - Billing month (1-12)
+ * @param {Array} pausePeriods - Array of { startDate, endDate } objects
+ * @param {Object} activeRange - { from: Date, to: Date } — the window this customer was active
+ * @returns {Object} Billing breakdown for the split period
+ */
+function calculateSplitBill(monthlyPrice, year, month, pausePeriods = [], activeRange) {
+  const totalWeekdays = getWeekdaysInMonth(year, month);
+
+  const monthStart = new Date(year, month - 1, 1);
+  monthStart.setHours(0, 0, 0, 0);
+  const monthEnd = new Date(year, month, 0);
+  monthEnd.setHours(23, 59, 59, 999);
+
+  // Clamp activeRange to the billing month
+  const rangeFrom = activeRange.from < monthStart ? new Date(monthStart) : new Date(activeRange.from);
+  rangeFrom.setHours(0, 0, 0, 0);
+  const rangeTo = activeRange.to > monthEnd ? new Date(monthEnd) : new Date(activeRange.to);
+  rangeTo.setHours(0, 0, 0, 0);
+
+  // Count weekdays in the active range
+  const activeWeekdays = getWeekdaysBetweenDates(rangeFrom, rangeTo);
+
+  // Calculate paused weekdays within the active range
+  const pausedDatesSet = new Set();
+
+  for (const period of pausePeriods) {
+    const pStart = new Date(period.startDate);
+    pStart.setHours(0, 0, 0, 0);
+    const pEnd = period.endDate ? new Date(period.endDate) : new Date(rangeTo);
+    pEnd.setHours(0, 0, 0, 0);
+
+    // Clamp to both month and active range
+    const effectiveStart = pStart < rangeFrom ? new Date(rangeFrom) : new Date(pStart);
+    const effectiveEnd = pEnd > rangeTo ? new Date(rangeTo) : new Date(pEnd);
+
+    if (effectiveStart > effectiveEnd) continue;
+
+    const current = new Date(effectiveStart);
+    while (current <= effectiveEnd) {
+      if (isWeekday(current)) {
+        pausedDatesSet.add(current.toISOString().split('T')[0]);
+      }
+      current.setDate(current.getDate() + 1);
+    }
+  }
+
+  const pausedWeekdays = pausedDatesSet.size;
+  const billableDays = activeWeekdays - pausedWeekdays;
+  const dailyRate = totalWeekdays > 0 ? monthlyPrice / totalWeekdays : 0;
+  const finalBill = Math.round(dailyRate * billableDays * 100) / 100;
+
+  return {
+    year,
+    month,
+    totalWeekdays,
+    activeWeekdays,
+    pausedWeekdays,
+    billableDays,
+    monthlyPrice,
+    dailyRate: Math.round(dailyRate * 100) / 100,
+    finalBill,
+    activeRange: {
+      from: `${rangeFrom.getFullYear()}-${String(rangeFrom.getMonth() + 1).padStart(2, '0')}-${String(rangeFrom.getDate()).padStart(2, '0')}`,
+      to: `${rangeTo.getFullYear()}-${String(rangeTo.getMonth() + 1).padStart(2, '0')}-${String(rangeTo.getDate()).padStart(2, '0')}`
+    }
+  };
+}
 
 module.exports = {
   isWeekday,
   getWeekdaysInMonth,
   getWeekdaysBetweenDates,
-  calculateBill
+  calculateBill,
+  calculateSplitBill
 };
